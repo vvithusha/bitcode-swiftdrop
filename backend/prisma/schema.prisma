@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+}
+
+enum EventStatus {
+  LOCKED
+  LIVE
+  CLOSED
+  SOLD_OUT
+}
+
+enum OrderStatus {
+  RESERVED
+  CONFIRMED
+  CANCELLED
+}
+
+enum StockReservationStatus {
+  RESERVED
+  CONFIRMED
+  CANCELLED
+}
+
+model User {
+  id           String               @id @default(uuid())
+  email        String               @unique
+  displayName  String
+  passwordHash String
+  role         UserRole             @default(CUSTOMER)
+  isActive     Boolean              @default(true)
+  createdAt    DateTime             @default(now())
+  orders       Order[]
+  reservations StockReservation[]
+}
+
+model Event {
+  id           String   @id @default(uuid())
+  name         String
+  coverPhotoUrl String
+  scheduledAt  DateTime
+  status       EventStatus @default(LOCKED)
+  createdAt    DateTime @default(now())
+  items        Item[]
+  orders       Order[]
+  reservations StockReservation[]
+}
+
+model Item {
+  id            String   @id @default(uuid())
+  eventId       String
+  name          String
+  coverPhotoUrl String
+  unitPrice     Int
+  stockQuantity Int
+  soldCount     Int      @default(0)
+  createdAt     DateTime @default(now())
+  event         Event    @relation(fields: [eventId], references: [id])
+  orders        Order[]
+  reservations  StockReservation[]
+}
+
+model Order {
+  id        String      @id @default(uuid())
+  userId    String
+  itemId    String
+  eventId   String
+  status    OrderStatus @default(RESERVED)
+  pricePaid Int
+  createdAt DateTime    @default(now())
+  user      User        @relation(fields: [userId], references: [id])
+  item      Item        @relation(fields: [itemId], references: [id])
+  event     Event       @relation(fields: [eventId], references: [id])
+}
+
+model StockReservation {
+  id        String                   @id @default(uuid())
+  userId    String
+  itemId    String
+  eventId   String
+  status    StockReservationStatus   @default(RESERVED)
+  createdAt DateTime                 @default(now())
+  user      User                     @relation(fields: [userId], references: [id])
+  item      Item                     @relation(fields: [itemId], references: [id])
+  event     Event                    @relation(fields: [eventId], references: [id])
+}
