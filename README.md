@@ -69,7 +69,7 @@ npx prisma migrate dev
 node seed.js
 npm run dev
 ```
-
+ 
 ### Frontend
 ```bash
 cd frontend
